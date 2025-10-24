@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Irrigation System Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8fafc;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 1rem;
+    }
+    form {
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    input, select, button {
+      padding: 0.6rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #0078ff;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #005fd1;
+    }
+    #result {
+      background: #e6f2ff;
+      border: 1px solid #0078ff;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      width: 320px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🌾 Smart Irrigation Test</h1>
+
+  <form id="irrigationForm">
+    <label>Latitude:</label>
+    <input type="number" id="lat" step="any" placeholder="e.g. 35.8" required>
+
+    <label>Longitude:</label>
+    <input type="number" id="lon" step="any" placeholder="e.g. 10.6" required>
+
+    <label>Crop Stage:</label>
+    <select id="stage">
+      <option value="initial">Initial</option>
+      <option value="mid" selected>Mid</option>
+      <option value="late">Late</option>
+    </select>
+
+    <label>Traditional Irrigation (mm):</label>
+    <input type="number" id="traditional" step="any" value="5">
+
+    <button type="submit">Run Smart Irrigation</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    document.getElementById("irrigationForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const lat = document.getElementById("lat").value;
+      const lon = document.getElementById("lon").value;
+      const stage = document.getElementById("stage").value;
+      const traditional = document.getElementById("traditional").value;
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "⏳ Running irrigation model...";
+
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/run_irrigation?lat=${lat}&lon=${lon}&stage=${stage}&traditional=${traditional}`);
+        if (!res.ok) throw new Error("API request failed");
+        const data = await res.json();
+
+        resultDiv.innerHTML = `
+          ✅ <strong>Smart Irrigation Results</strong><br>
+          NDVI: ${data.ndvi}<br>
+          ET₀: ${data.et0}<br>
+          Kc: ${data.kc}<br>
+          Smart Irrigation: ${data.smart_irrigation} mm<br>
+          <br><strong>💧 Savings:</strong><br>${JSON.stringify(data.savings, null, 2)}
+        `;
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = `<span style="color:red;">❌ Error: ${err.message}</span>`;
+      }
+    });
+  </script>
+
+</body>
+</html>
